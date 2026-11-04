@@ -15,7 +15,7 @@ Safari stays the one place bookmarks are kept: Chrome only reads them, so nothin
 
 ## Running
 
-`mise install` runs `mise run install`, and registers git hooks that run it again after each commit, merge and checkout in the main checkout, so the copied host follows the repository; an uncommitted edit to the host takes effect after `mise run install` by hand.
+`mise install` runs `mise run install` in the main checkout, and registers a post-merge hook that runs it again after a `git pull` that changes the host or `mise.toml`, so the copied host follows `main`; an edit to the host not yet merged takes effect after `mise run install` by hand.
 Once per Chrome profile: open `chrome://extensions`, turn on Developer mode, and load `extension/` unpacked.
 After a change to `manifest.json` or `background.js`, reload the extension there; the panel's files take effect when it reopens.
 

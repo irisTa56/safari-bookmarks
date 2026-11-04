@@ -12,7 +12,7 @@
 # Shell rather than Node: Chrome starts it once per message with a bare PATH,
 # where mise's Node would have to be found first.
 # Copied out of the repository and registered with Chrome by `mise run install`,
-# which git hooks rerun after each commit (mise.toml).
+# which a post-merge hook reruns when a pull changes this file (mise.toml).
 #
 # Protocol: a 4-byte native-endian length, then that many bytes of JSON; the
 # reply is framed the same way, and Chrome takes at most 1 MB from a host.
