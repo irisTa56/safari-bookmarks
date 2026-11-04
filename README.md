@@ -8,6 +8,7 @@ Safari stays the one place bookmarks are kept: Chrome only reads them, so nothin
 - `extension/`: the Chrome extension, loaded unpacked.
   - The side panel lists the bookmarks it asks the native host for, with a filter, a text size control and a button that reads them again.
   - The context menu's "Open Page in Safari" and "Open Link in Safari" send the URL to the native host.
+  - `icons/icon.svg` is the icon's source. Chrome takes no SVG for an extension's icons, so the PNGs beside it are rendered from it and committed: `for s in 16 32 48 128; do rsvg-convert -w $s -h $s icon.svg -o icon-$s.png; done` in that directory.
 - `scripts/export_bookmarks.js`: writes `bookmarks.json` from `~/Library/Safari/Bookmarks.plist`.
 - `scripts/open_in_safari_host.sh`: the native messaging host. It runs `open -a Safari <url>`, and replies to the panel with `bookmarks.json`.
   - Safari's own `x-safari-https` scheme needs no host, but it makes Safari show its default-browser banner on every handoff and turns http into https.
