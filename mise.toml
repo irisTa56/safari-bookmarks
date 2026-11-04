@@ -95,52 +95,23 @@ run = "rumdl check --fix"
 description = "Format every file the checks cover"
 depends = ["fmt:*"]
 
-# Everything outside the repository lives in one directory, D below: the
-# exporter as a symlink back into scripts/, so an edit there takes effect with
-# no reinstall, the native host as a copy, and the export they share. The host
-# cannot be a link: a process Chrome starts is refused reading anything under
-# ~/Documents ("Operation not permitted", so Chrome reports "Native host has
-# exited"), the script a link resolves to included. my-foam's daemon
-# runs D/export_bookmarks.js (README.md "Running"), and Chrome's registration
-# names D/open_in_safari_host.sh. Chrome derives an unpacked extension's ID from
-# its directory's path (SHA-256, first 32 hex digits spelled a-p), and the host
-# allows only that ID. `mise install` runs it in the main checkout, and the
-# post-merge hook above again through `install:hook`; an edit to the host is
-# tried before it is merged by running this by hand.
+# What is installed where, and why, is scripts/install.js's header. `mise
+# install` runs this in the main checkout, and the post-merge hook above again
+# through `install:hook`; an edit to the host is tried before it is merged by
+# running this by hand.
 [tasks.install]
 description = "Install the exporter and the native host out of the repository and register the host with Chrome"
-run = """
-set -eu
-ext=$(cd "{{config_root}}/extension" && pwd -P)
-scripts=$(cd "{{config_root}}/scripts" && pwd -P)
-id=$(printf %s "$ext" | shasum -a 256 | cut -c1-32 | tr 0-9a-f a-p)
-d="$HOME/Library/Application Support/safari-bookmarks"
-hosts="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
-mkdir -p "$d" "$hosts"
-ln -sfn "$scripts/export_bookmarks.js" "$d/export_bookmarks.js"
-rm -f "$d/open_in_safari_host.sh"
-install -m 755 "$scripts/open_in_safari_host.sh" "$d/open_in_safari_host.sh"
-cat > "$hosts/local.safari_bookmarks.open_in_safari.json" <<JSON
-{
-  "name": "local.safari_bookmarks.open_in_safari",
-  "description": "Hand pages to Safari and read Safari's bookmarks for the Safari Bookmarks extension",
-  "path": "$d/open_in_safari_host.sh",
-  "type": "stdio",
-  "allowed_origins": ["chrome-extension://$id/"]
-}
-JSON
-echo "installed into $d for chrome-extension://$id/"
-"""
+run = "node scripts/install.js"
 
 # After a merge, install again when it changed what install copies or does.
 # Only the main checkout installs: the extension Chrome loads, and so the ID the
 # host allows, is the one in that checkout, and a worktree would overwrite its
 # host with its own branch's. Quiet when nothing went wrong, as a git hook.
 [tasks."install:hook"]
-description = "Install again after a merge that changed the host or mise.toml, in the main checkout only"
+description = "Install again after a merge that changed the host or how it is installed, in the main checkout only"
 hide = true
 run = '''
 [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ] || exit 0
-git diff --quiet ORIG_HEAD HEAD -- scripts/open_in_safari_host.sh mise.toml && exit 0
+git diff --quiet ORIG_HEAD HEAD -- scripts/open_in_safari_host.sh scripts/install.js mise.toml && exit 0
 mise run install >/dev/null
 '''
