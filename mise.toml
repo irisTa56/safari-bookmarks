@@ -89,15 +89,18 @@ description = "Format every file the checks cover"
 depends = ["fmt:*"]
 
 # Everything outside the repository lives in one directory, D below: the
-# exporter and the native host as symlinks back into scripts/, so an edit there
-# takes effect with no reinstall, and the export they share. my-foam's daemon
+# exporter as a symlink back into scripts/, so an edit there takes effect with
+# no reinstall, the native host as a copy, and the export they share. The host
+# cannot be a link: a process Chrome starts is refused reading anything under
+# ~/Documents ("Operation not permitted", so Chrome reports "Native host has
+# exited"), the script a link resolves to included. my-foam's daemon
 # runs D/export_bookmarks.js (README.md "Running"), and Chrome's registration
 # names D/open_in_safari_host.sh. Chrome derives an unpacked extension's ID from
 # its directory's path (SHA-256, first 32 hex digits spelled a-p), and the host
-# allows only that ID. Run once per machine, and again after the extension
-# directory moves or this task changes.
+# allows only that ID. Run once per machine, and again after the host script,
+# the extension's directory or this task changes.
 [tasks.install]
-description = "Link the exporter and the native host out of the repository and register the host with Chrome"
+description = "Install the exporter and the native host out of the repository and register the host with Chrome"
 run = """
 set -eu
 ext=$(cd "{{config_root}}/extension" && pwd -P)
@@ -107,7 +110,8 @@ d="$HOME/Library/Application Support/safari-bookmarks"
 hosts="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
 mkdir -p "$d" "$hosts"
 ln -sfn "$scripts/export_bookmarks.js" "$d/export_bookmarks.js"
-ln -sfn "$scripts/open_in_safari_host.sh" "$d/open_in_safari_host.sh"
+rm -f "$d/open_in_safari_host.sh"
+install -m 755 "$scripts/open_in_safari_host.sh" "$d/open_in_safari_host.sh"
 cat > "$hosts/local.safari_bookmarks.open_in_safari.json" <<JSON
 {
   "name": "local.safari_bookmarks.open_in_safari",

@@ -11,7 +11,8 @@
 #
 # Shell rather than Node: Chrome starts it once per message with a bare PATH,
 # where mise's Node would have to be found first.
-# Registered with Chrome by `mise run install`.
+# Copied out of the repository and registered with Chrome by `mise run install`,
+# which is run again after a change here.
 #
 # Protocol: a 4-byte native-endian length, then that many bytes of JSON; the
 # reply is framed the same way, and Chrome takes at most 1 MB from a host.

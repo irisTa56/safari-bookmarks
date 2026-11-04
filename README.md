@@ -11,11 +11,11 @@ Safari stays the one place bookmarks are kept: Chrome only reads them, so nothin
 - `scripts/export_bookmarks.js`: writes `bookmarks.json` from `~/Library/Safari/Bookmarks.plist`.
 - `scripts/open_in_safari_host.sh`: the native messaging host. It runs `open -a Safari <url>`, and replies to the panel with `bookmarks.json`.
   - Safari's own `x-safari-https` scheme needs no host, but it makes Safari show its default-browser banner on every handoff and turns http into https.
-- `mise run install`: links the exporter and the host into `~/Library/Application Support/safari-bookmarks/`, where the export is written too, and registers the host with Chrome (see `mise.toml`).
+- `mise run install`: links the exporter and copies the host into `~/Library/Application Support/safari-bookmarks/`, where the export is written too, and registers the host with Chrome (see `mise.toml` for why the host is a copy).
 
 ## Running
 
-Once per machine, run `mise run install`; the links make later edits to `scripts/` take effect without running it again.
+Once per machine, run `mise run install`, and again after a change to the host script: the exporter is linked, so an edit to it takes effect without that, but the host is a copy.
 Once per Chrome profile: open `chrome://extensions`, turn on Developer mode, and load `extension/` unpacked.
 After a change to `manifest.json` or `background.js`, reload the extension there; the panel's files take effect when it reopens.
 
