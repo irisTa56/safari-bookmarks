@@ -1,6 +1,6 @@
-# Version updates for the type-checking dev dependencies (package.json). Their
-# pull request is the notification: a bump is merged by hand once `hk check
-# --all` passes on it, as nothing else runs here.
+# Both entries auto-merge (.github/workflows/dependabot-auto-merge.yml) once the
+# required CI checks pass: js-qa type-checks the extension against a bumped
+# @types/chrome or typescript, and every job runs on a bumped action.
 version: 2
 updates:
   - package-ecosystem: "npm"
@@ -10,3 +10,19 @@ updates:
     groups:
       npm-deps:
         patterns: ["*"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # One pull request for all of a week's version updates. Auto-merge runs on
+    # GITHUB_TOKEN, which has no `workflows` permission: once one update to a
+    # workflow file has merged, GitHub refuses to merge a second pull request
+    # that was branched before it and touches the same file.
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "chore(ci)"

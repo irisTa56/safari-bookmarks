@@ -1,6 +1,0 @@
-root = true
-
-# shfmt takes its indentation from here (hk's shfmt step passes no -i).
-[scripts/**.sh]
-indent_style = space
-indent_size = 2

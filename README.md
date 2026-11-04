@@ -15,7 +15,7 @@ Safari stays the one place bookmarks are kept: Chrome only reads them, so nothin
 
 ## Running
 
-The export and the host install run from a pitchfork daemon kept with the user's other daemons in [my-foam](https://github.com/irisTa56/my-foam)'s `mise.toml` (`[daemons.safari-bookmarks]`).
+The export and the host install run from a pitchfork daemon kept with the user's other daemons in the `mise.toml` of my-foam, a private repository (`[daemons.safari-bookmarks]`).
 At start it runs `mise run install:host`, then watches Safari's directory with watchexec and re-exports on each change to `Bookmarks.plist`.
 
 Done by hand, once per Chrome profile: open `chrome://extensions`, turn on Developer mode, and load `extension/` unpacked.
@@ -24,4 +24,5 @@ After a change to `manifest.json` or `background.js`, reload the extension there
 ## Checks
 
 `mise install` sets up the tools and the git hooks.
-hk runs Biome, tsc (type-checking the JavaScript against Chrome's API types, with no build), shellcheck, shfmt, mix format and gitleaks on commit; `mise run fmt` formats every file they cover.
+On commit, `mise run pre-commit` runs every `qa:` task in `mise.toml` (Biome; tsc, type-checking the JavaScript against Chrome's API types with no build; shellcheck and shfmt; rumdl; an offline link check) and the shared secret and link scans from dotfiles; CI runs the same `qa:` tasks.
+`mise run fmt` formats every file they cover.

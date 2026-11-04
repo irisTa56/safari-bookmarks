@@ -1,0 +1,22 @@
+name: Dependabot auto-merge
+
+on: pull_request
+
+# Enabling auto-merge needs contents:write; nothing more.
+permissions:
+  contents: write
+
+jobs:
+  auto-merge:
+    name: enable auto-merge
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      # Auto-merge waits for the main ruleset's required checks, which are
+      # every job in ci.yml, so a failing update (any semver level, incl.
+      # major) will not be merged.
+      - name: Enable auto-merge
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

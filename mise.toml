@@ -1,32 +1,90 @@
+[settings]
+# mise skips a `git::` entry of `task_config.includes` unless this is on
+# (jdx/mise#14114), and every shared task below goes with it. It turns on every
+# feature mise marks experimental, not this one alone.
+experimental = true
+
 [tools]
 biome = "latest"
-gitleaks = "latest"
-hk = "latest"
+lychee = "latest"
 node = "24"
+rumdl = "latest"
 shellcheck = "latest"
 shfmt = "latest"
 
-[env]
-HK_MISE = 1
-
+# The pre-commit hook is regenerated on every install, as in dotfiles: it only
+# runs the pre-commit task. The push scan is registered in git's config instead,
+# since it needs git's remote argument and ref lines on stdin, which only a hook
+# registered there receives (git 2.54+; see dotfiles' tasks/README.md).
 [hooks]
-# Same hooks as my-foam: hk keeps the commit hooks in sync with hk.pkl, and the
-# shared secrets:push-scan needs git's remote argument and ref lines on stdin,
-# which only a hook registered in git's config receives (git 2.54+; see
-# dotfiles' tasks/README.md).
 postinstall = '''
-hk install --mise
+mise generate git-pre-commit --write --task=pre-commit
 git config hook.secrets-push-scan.event pre-push
 git config hook.secrets-push-scan.command 'mise run secrets:push-scan'
 git hook list pre-push 2>/dev/null | grep -qx secrets-push-scan || echo "warning: this git ignores hook.* config, so pushes are not scanned; git 2.54 or later runs it" >&2
 '''
 
-# Shared tasks from dotfiles' tasks/ (see its tasks/README.md); secrets:push-scan
-# brings its own trufflehog. Pin a full commit sha on dotfiles' main.
+# `secrets:commit-scan` (per commit, gitleaks), `secrets:push-scan` (per push,
+# trufflehog), `link-check:staged` (per commit, lychee over the network) and
+# `shared-tasks:check` come from dotfiles' shared task library, whose
+# `tasks/README.md` says why `ref` is a full sha on its `main`.
 [task_config]
 includes = [
-  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=a84c8dd04ff6e5afb14d8f705ae82fe254724192",
+  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=7d617e18718c88780c6bccd8975e8347688d8024",
 ]
+
+# CI runs each `qa:` task as a job of its own (.github/workflows/ci.yml), so a new
+# `qa:` task needs a job there too. `**`, not `*`: mise's `*` matches a single
+# task segment and would leave `qa:links:offline` out. The shared scans sit
+# outside `qa:`: CI scans a pull request's commits with its own jobs, and a
+# networked link check would gate a pull request on third-party hosts.
+[tasks.pre-commit]
+description = "Run pre-commit checks"
+depends = ["qa:**", "secrets:commit-scan", "link-check:staged"]
+
+# Chrome loads extension/ as is, with no build: Biome formats and lints it
+# (biome.json), and tsc type-checks its JavaScript against Chrome's API types
+# (tsconfig.json), installing the locked dev dependencies on first use.
+[tasks."qa:js"]
+description = "Lint, check formatting of and type-check the JavaScript"
+run = [
+  "biome ci --error-on-warnings",
+  "{ [ -d node_modules ] || npm ci --no-audit --no-fund --silent; } && node_modules/.bin/tsc -p .",
+]
+
+[tasks."qa:sh"]
+description = "Lint and check formatting of shell scripts"
+run = ["shellcheck scripts/*.sh", "shfmt -i 2 -d scripts/*.sh"]
+
+[tasks."qa:md"]
+description = "Lint markdown files"
+run = "rumdl check"
+
+# Offline, so a pull request never waits on a third-party host; the weekly
+# workflow and `check:links` request every link.
+[tasks."qa:links:offline"]
+description = "Check links offline (no network)"
+run = "lychee --offline --no-progress --config lychee.toml ."
+
+[tasks."check:links"]
+description = "Check links in the repo"
+run = "lychee -v --config lychee.toml ."
+
+[tasks."fmt:js"]
+description = "Format and fix the JavaScript, JSON, CSS and HTML"
+run = "biome check --write"
+
+[tasks."fmt:sh"]
+description = "Format shell scripts"
+run = "shfmt -i 2 -w scripts/*.sh"
+
+[tasks."fmt:md"]
+description = "Format markdown files"
+run = "rumdl check --fix"
+
+[tasks.fmt]
+description = "Format every file the checks cover"
+depends = ["fmt:*"]
 
 # Chrome starts the host with no access to ~/Documents, where the repository
 # lives (it exited before its first line from there), so the script is copied
@@ -55,7 +113,3 @@ cat > "$dir/local.safari_bookmarks.open_in_safari.json" <<JSON
 JSON
 echo "installed the Safari host for chrome-extension://$id/"
 """
-
-[tasks.fmt]
-description = "Format and fix every file the commit checks cover"
-run = "hk fix --all"
