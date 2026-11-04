@@ -1,9 +1,11 @@
 {
   "name": "safari-bookmarks",
   "private": true,
-  "description": "Type-checking only: Chrome loads extension/ as is, with no build.",
+  "type": "module",
+  "description": "Type-checking only: Chrome loads extension/ and Node runs scripts/ as they are, with no build.",
   "devDependencies": {
     "@types/chrome": "^0.3.7",
+    "@types/node": "^24.19.2",
     "typescript": "^7.0.2"
   }
 }

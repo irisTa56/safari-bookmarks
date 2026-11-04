@@ -1,7 +1,4 @@
 node_modules/
-# Written by the bookmark exporter.
-extension/bookmarks.json
-extension/bookmarks.json.tmp
 
 # Claude Code's nested worktree checkouts, each a full copy of the repo.
 # `hidden = true` in `lychee.toml` would otherwise walk into them.

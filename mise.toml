@@ -42,14 +42,16 @@ includes = [
 description = "Run pre-commit checks"
 depends = ["qa:**", "secrets:commit-scan", "link-check:staged"]
 
-# Chrome loads extension/ as is, with no build: Biome formats and lints it
-# (biome.json), and tsc type-checks its JavaScript against Chrome's API types
-# (tsconfig.json), installing the locked dev dependencies on first use.
+# Nothing here is built: Chrome loads extension/ as is and Node runs scripts/.
+# Biome formats and lints both (biome.json), and tsc type-checks their
+# JavaScript, the extension against Chrome's API types (tsconfig.json) and the
+# exporter against Node's (scripts/tsconfig.json), installing the locked dev
+# dependencies on first use.
 [tasks."qa:js"]
 description = "Lint, check formatting of and type-check the JavaScript"
 run = [
   "biome ci --error-on-warnings",
-  "{ [ -d node_modules ] || npm ci --no-audit --no-fund --silent; } && node_modules/.bin/tsc -p .",
+  "{ [ -d node_modules ] || npm ci --no-audit --no-fund --silent; } && node_modules/.bin/tsc -p . && node_modules/.bin/tsc -p scripts",
 ]
 
 [tasks."qa:sh"]
@@ -86,30 +88,34 @@ run = "rumdl check --fix"
 description = "Format every file the checks cover"
 depends = ["fmt:*"]
 
-# Chrome starts the host with no access to ~/Documents, where the repository
-# lives (it exited before its first line from there), so the script is copied
-# out. Chrome derives an unpacked extension's ID from its directory's path
-# (SHA-256, first 32 hex digits spelled a-p), and the host allows only that ID.
-# The daemon that exports the bookmarks runs this at start (README.md
-# "Running"), so it is not run by hand.
-[tasks."install:host"]
-description = "Install the Open in Safari native messaging host for Chrome"
+# Everything outside the repository lives in one directory, D below: the
+# exporter and the native host as symlinks back into scripts/, so an edit there
+# takes effect with no reinstall, and the export they share. my-foam's daemon
+# runs D/export_bookmarks.js (README.md "Running"), and Chrome's registration
+# names D/open_in_safari_host.sh. Chrome derives an unpacked extension's ID from
+# its directory's path (SHA-256, first 32 hex digits spelled a-p), and the host
+# allows only that ID. Run once per machine, and again after the extension
+# directory moves or this task changes.
+[tasks.install]
+description = "Link the exporter and the native host out of the repository and register the host with Chrome"
 run = """
 set -eu
 ext=$(cd "{{config_root}}/extension" && pwd -P)
+scripts=$(cd "{{config_root}}/scripts" && pwd -P)
 id=$(printf %s "$ext" | shasum -a 256 | cut -c1-32 | tr 0-9a-f a-p)
-bin="$HOME/Library/Application Support/safari-bookmarks"
-dir="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
-mkdir -p "$bin" "$dir"
-install -m 755 "{{config_root}}/scripts/open_in_safari_host.sh" "$bin/open_in_safari_host.sh"
-cat > "$dir/local.safari_bookmarks.open_in_safari.json" <<JSON
+d="$HOME/Library/Application Support/safari-bookmarks"
+hosts="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
+mkdir -p "$d" "$hosts"
+ln -sfn "$scripts/export_bookmarks.js" "$d/export_bookmarks.js"
+ln -sfn "$scripts/open_in_safari_host.sh" "$d/open_in_safari_host.sh"
+cat > "$hosts/local.safari_bookmarks.open_in_safari.json" <<JSON
 {
   "name": "local.safari_bookmarks.open_in_safari",
-  "description": "Open a URL from the Safari Bookmarks extension in Safari",
-  "path": "$bin/open_in_safari_host.sh",
+  "description": "Hand pages to Safari and read Safari's bookmarks for the Safari Bookmarks extension",
+  "path": "$d/open_in_safari_host.sh",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://$id/"]
 }
 JSON
-echo "installed the Safari host for chrome-extension://$id/"
+echo "installed into $d for chrome-extension://$id/"
 """

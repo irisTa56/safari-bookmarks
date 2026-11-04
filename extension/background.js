@@ -39,7 +39,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     const message = e instanceof Error ? e.message : String(e);
     await chrome.action.setBadgeText({ text: "!" });
     await chrome.action.setTitle({
-      title: `Open in Safari failed: ${message}. Is the host installed (mise run install:host)?`,
+      title: `Open in Safari failed: ${message}. Is the host installed (mise run install)?`,
     });
   }
 });

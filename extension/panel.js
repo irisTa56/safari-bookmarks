@@ -1,5 +1,6 @@
 /**
- * The shape ../scripts/export_bookmarks.exs writes.
+ * The shape ../scripts/export_bookmarks.js writes, which the native host
+ * (../scripts/open_in_safari_host.sh) hands over.
  * @typedef {{ title: string, children: Entry[] }} Folder
  * @typedef {{ title: string, url: string }} Bookmark
  * @typedef {Folder | Bookmark} Entry
@@ -11,20 +12,26 @@ const root = byId("bookmarks", HTMLElement);
 const status = byId("status", HTMLElement);
 
 // Read on every opening of the panel; a panel left open keeps what it read.
+// The export lives outside the extension, so the host reads it.
+/** @type {{ ok: true, bookmarks: Export } | { ok: false, error: string } | undefined} */
+let res;
 try {
-  const res = await fetch("bookmarks.json", { cache: "no-store" });
-  if (!res.ok) throw new Error(`bookmarks.json: HTTP ${res.status}`);
-  /** @type {Export} */
-  const data = await res.json();
-  for (const s of data.sections) {
+  res = await chrome.runtime.sendNativeMessage("local.safari_bookmarks.open_in_safari", {
+    cmd: "bookmarks",
+  });
+} catch (e) {
+  const message = e instanceof Error ? e.message : String(e);
+  status.textContent = `${message}. Is the host installed (mise run install)?`;
+}
+if (res?.ok) {
+  for (const s of res.bookmarks.sections) {
     const section = document.createElement("section");
     section.append(folder(s.title, s.children, true));
     root.append(section);
   }
-  status.textContent = `generated ${data.generated.replace("T", " ")}`;
-} catch (e) {
-  const message = e instanceof Error ? e.message : String(e);
-  status.textContent = `${message}; is the safari-bookmarks daemon running?`;
+  status.textContent = `generated ${res.bookmarks.generated.replace("T", " ")}`;
+} else if (res) {
+  status.textContent = res.error;
 }
 
 /** @type {[HTMLDetailsElement, boolean][]} */
@@ -126,7 +133,7 @@ byId("smaller", HTMLButtonElement).addEventListener("click", () => step(-1));
 byId("larger", HTMLButtonElement).addEventListener("click", () => step(1));
 applySize();
 
-// The panel reads bookmarks.json only when it opens; this reads it again.
+// The panel reads the bookmarks only when it opens; this reads them again.
 byId("reload", HTMLButtonElement).addEventListener("click", () => location.reload());
 
 /**
