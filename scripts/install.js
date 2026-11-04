@@ -11,7 +11,12 @@
 // my-foam's daemon runs D/export_bookmarks.js (README.md "Running").
 //
 // Run through `mise run install` (mise.toml says when it runs on its own).
+// From a worktree, only the host comes from that worktree, so an edit to it can
+// be tried before it is merged: the extension Chrome loads, and so the ID the
+// host allows, and the exporter the daemon runs stay the main checkout's, which
+// outlives the worktree.
 
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   chmodSync,
@@ -28,7 +33,14 @@ import { fileURLToPath } from "node:url";
 
 const name = "local.safari_bookmarks.open_in_safari";
 const scripts = realpathSync(dirname(fileURLToPath(import.meta.url)));
-const extension = realpathSync(join(scripts, "../extension"));
+// The common git dir is the main checkout's .git, in a worktree as well.
+const commonGitDir = execFileSync(
+  "git",
+  ["-C", scripts, "rev-parse", "--path-format=absolute", "--git-common-dir"],
+  { encoding: "utf8" },
+).trim();
+const main = realpathSync(dirname(commonGitDir));
+const extension = realpathSync(join(main, "extension"));
 const d = join(homedir(), "Library/Application Support/safari-bookmarks");
 const hosts = join(homedir(), "Library/Application Support/Google/Chrome/NativeMessagingHosts");
 
@@ -37,7 +49,7 @@ mkdirSync(hosts, { recursive: true });
 
 const exporter = join(d, "export_bookmarks.js");
 rmSync(exporter, { force: true });
-symlinkSync(join(scripts, "export_bookmarks.js"), exporter);
+symlinkSync(join(main, "scripts/export_bookmarks.js"), exporter);
 
 // Removed first, so a link left by an earlier install is replaced rather than
 // written through into the repository.

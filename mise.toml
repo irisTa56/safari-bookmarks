@@ -52,13 +52,15 @@ depends = ["qa:**", "secrets:commit-scan", "link-check:staged"]
 # Biome formats and lints both (biome.json), and tsc type-checks their
 # JavaScript, the extension against Chrome's API types (tsconfig.json) and the
 # exporter against Node's (scripts/tsconfig.json), installing the locked dev
-# dependencies on first use. They are type definitions and tsc alone, which run
-# no install script, and Dependabot merges their bumps unread, so none is run.
+# dependencies on first use and again whenever package-lock.json is newer than
+# what npm last installed, so a bump a pull brings is checked against here too.
+# They are type definitions and tsc alone, which run no install script, and
+# Dependabot merges their bumps unread, so none is run.
 [tasks."qa:js"]
 description = "Lint, check formatting of and type-check the JavaScript"
 run = [
   "biome ci --error-on-warnings",
-  "{ [ -d node_modules ] || npm ci --ignore-scripts --no-audit --no-fund --silent; } && node_modules/.bin/tsc -p . && node_modules/.bin/tsc -p scripts",
+  "{ [ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --ignore-scripts --no-audit --no-fund --silent; } && node_modules/.bin/tsc -p . && node_modules/.bin/tsc -p scripts",
 ]
 
 [tasks."qa:sh"]
