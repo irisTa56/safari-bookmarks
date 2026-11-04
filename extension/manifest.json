@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Safari Bookmarks",
+  "version": "1.0",
+  "description": "Browse Safari's bookmarks in the side panel, and hand pages to Safari.",
+  "permissions": ["sidePanel", "contextMenus", "nativeMessaging"],
+  "background": { "service_worker": "background.js" },
+  "side_panel": { "default_path": "panel.html" },
+  "action": { "default_title": "Safari Bookmarks" }
+}

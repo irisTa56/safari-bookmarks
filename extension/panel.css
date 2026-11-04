@@ -1,0 +1,80 @@
+:root {
+  color-scheme: light dark;
+  --muted: #6b7280;
+  --line: #d1d5db;
+}
+body {
+  font:
+    13px / 1.5 -apple-system,
+    system-ui,
+    sans-serif;
+  margin: 0;
+  padding: 8px 10px;
+}
+header {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  padding-bottom: 6px;
+  background: Canvas;
+}
+#q {
+  flex: 1;
+  min-width: 120px;
+  font: inherit;
+  padding: 3px 6px;
+}
+.meta {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+main {
+  font-size: var(--size, 13px);
+}
+ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+}
+section > details > ul {
+  border-left: none;
+  padding-left: 2px;
+}
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+section > details > summary {
+  font-size: 1.08em;
+  margin-top: 8px;
+}
+li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+li a {
+  text-decoration: none;
+}
+li a:hover {
+  text-decoration: underline;
+}
+.host {
+  color: var(--muted);
+  font-size: 0.85em;
+  margin-left: 6px;
+}
+.hidden {
+  display: none;
+}
+#reload,
+#smaller,
+#larger {
+  font: inherit;
+  padding: 0 6px;
+}

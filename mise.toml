@@ -1,0 +1,61 @@
+[tools]
+biome = "latest"
+gitleaks = "latest"
+hk = "latest"
+node = "24"
+shellcheck = "latest"
+shfmt = "latest"
+
+[env]
+HK_MISE = 1
+
+[hooks]
+# Same hooks as my-foam: hk keeps the commit hooks in sync with hk.pkl, and the
+# shared secrets:push-scan needs git's remote argument and ref lines on stdin,
+# which only a hook registered in git's config receives (git 2.54+; see
+# dotfiles' tasks/README.md).
+postinstall = '''
+hk install --mise
+git config hook.secrets-push-scan.event pre-push
+git config hook.secrets-push-scan.command 'mise run secrets:push-scan'
+git hook list pre-push 2>/dev/null | grep -qx secrets-push-scan || echo "warning: this git ignores hook.* config, so pushes are not scanned; git 2.54 or later runs it" >&2
+'''
+
+# Shared tasks from dotfiles' tasks/ (see its tasks/README.md); secrets:push-scan
+# brings its own trufflehog. Pin a full commit sha on dotfiles' main.
+[task_config]
+includes = [
+  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=a84c8dd04ff6e5afb14d8f705ae82fe254724192",
+]
+
+# Chrome starts the host with no access to ~/Documents, where the repository
+# lives (it exited before its first line from there), so the script is copied
+# out. Chrome derives an unpacked extension's ID from its directory's path
+# (SHA-256, first 32 hex digits spelled a-p), and the host allows only that ID.
+# The daemon that exports the bookmarks runs this at start (README.md
+# "Running"), so it is not run by hand.
+[tasks."install:host"]
+description = "Install the Open in Safari native messaging host for Chrome"
+run = """
+set -eu
+ext=$(cd "{{config_root}}/extension" && pwd -P)
+id=$(printf %s "$ext" | shasum -a 256 | cut -c1-32 | tr 0-9a-f a-p)
+bin="$HOME/Library/Application Support/safari-bookmarks"
+dir="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
+mkdir -p "$bin" "$dir"
+install -m 755 "{{config_root}}/scripts/open_in_safari_host.sh" "$bin/open_in_safari_host.sh"
+cat > "$dir/local.safari_bookmarks.open_in_safari.json" <<JSON
+{
+  "name": "local.safari_bookmarks.open_in_safari",
+  "description": "Open a URL from the Safari Bookmarks extension in Safari",
+  "path": "$bin/open_in_safari_host.sh",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://$id/"]
+}
+JSON
+echo "installed the Safari host for chrome-extension://$id/"
+"""
+
+[tasks.fmt]
+description = "Format and fix every file the commit checks cover"
+run = "hk fix --all"

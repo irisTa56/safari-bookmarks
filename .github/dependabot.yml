@@ -1,0 +1,12 @@
+# Version updates for the type-checking dev dependencies (package.json). Their
+# pull request is the notification: a bump is merged by hand once `hk check
+# --all` passes on it, as nothing else runs here.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm-deps:
+        patterns: ["*"]

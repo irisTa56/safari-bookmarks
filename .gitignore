@@ -1,0 +1,4 @@
+node_modules/
+# Written by scripts/export_bookmarks.exs.
+extension/bookmarks.json
+extension/bookmarks.json.tmp

@@ -1,0 +1,34 @@
+amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Builtins.pkl"
+
+// Top-level steps define the check, fix, and pre-commit hooks at once.
+steps {
+    // Chrome loads extension/ as is, with no build: Biome formats and lints it
+    // (biome.json), and tsc type-checks its JavaScript against Chrome's API types
+    // (tsconfig.json), installing the locked dev dependencies on first use.
+    ["biome"] = (Builtins.biome) {
+        glob = List("*.json", "extension/*.js", "extension/*.json", "extension/*.css", "extension/*.html")
+        exclude = List("extension/bookmarks.json")
+    }
+    ["tsc"] {
+        glob = List("extension/*.js", "tsconfig.json", "package*.json")
+        check = "{ [ -d node_modules ] || npm ci --no-audit --no-fund --silent; } && node_modules/.bin/tsc -p ."
+    }
+    ["shellcheck"] = (Builtins.shellcheck) {
+        match_any = List(new FileSelector { glob = List("scripts/*.sh") })
+    }
+    ["shfmt"] = (Builtins.shfmt) {
+        match_any = List(new FileSelector { glob = List("scripts/*.sh") })
+    }
+    ["mix_fmt"] = (Builtins.mix_fmt) {
+        glob = List("scripts/*.exs")
+    }
+    // Scans the index rather than the file list: what gets committed.
+    ["gitleaks"] = (Builtins.gitleaks) {
+        scan = "staged"
+    }
+}
+
+// No pre-push hook here: the push-time trufflehog scan is the shared
+// secrets:push-scan task (see mise.toml), which needs git's remote argument
+// and ref lines on stdin, so it is registered in git's config instead.
