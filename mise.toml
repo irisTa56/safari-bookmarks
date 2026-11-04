@@ -15,13 +15,20 @@ shfmt = "latest"
 # The pre-commit hook is regenerated on every install, as in dotfiles: it only
 # runs the pre-commit task. The push scan is registered in git's config instead,
 # since it needs git's remote argument and ref lines on stdin, which only a hook
-# registered there receives (git 2.54+; see dotfiles' tasks/README.md).
+# registered there receives (git 2.54+; see dotfiles' tasks/README.md). So are
+# the hooks that keep what `install` puts outside the repository current with
+# the checkout: after a commit, a merge or a checkout, and here.
 [hooks]
 postinstall = '''
 mise generate git-pre-commit --write --task=pre-commit
 git config hook.secrets-push-scan.event pre-push
 git config hook.secrets-push-scan.command 'mise run secrets:push-scan'
 git hook list pre-push 2>/dev/null | grep -qx secrets-push-scan || echo "warning: this git ignores hook.* config, so pushes are not scanned; git 2.54 or later runs it" >&2
+for event in post-commit post-merge post-checkout; do
+  git config "hook.install-$event.event" "$event"
+  git config "hook.install-$event.command" 'mise run install:hook'
+done
+mise run install:hook
 '''
 
 # `secrets:commit-scan` (per commit, gitleaks), `secrets:push-scan` (per push,
@@ -97,8 +104,9 @@ depends = ["fmt:*"]
 # runs D/export_bookmarks.js (README.md "Running"), and Chrome's registration
 # names D/open_in_safari_host.sh. Chrome derives an unpacked extension's ID from
 # its directory's path (SHA-256, first 32 hex digits spelled a-p), and the host
-# allows only that ID. Run once per machine, and again after the host script,
-# the extension's directory or this task changes.
+# allows only that ID. The git hooks above run it through `install:hook`, so
+# the copy follows each commit; an uncommitted edit to the host is tried after
+# running this by hand.
 [tasks.install]
 description = "Install the exporter and the native host out of the repository and register the host with Chrome"
 run = """
@@ -123,3 +131,14 @@ cat > "$hosts/local.safari_bookmarks.open_in_safari.json" <<JSON
 JSON
 echo "installed into $d for chrome-extension://$id/"
 """
+
+# Only the main checkout installs: the extension Chrome loads, and so the ID the
+# host allows, is the one in that checkout, and a worktree would overwrite its
+# host with its own branch's. Quiet when nothing went wrong, as a git hook.
+[tasks."install:hook"]
+description = "Run install from a git hook, in the main checkout only"
+hide = true
+run = '''
+[ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ] || exit 0
+mise run install >/dev/null
+'''
