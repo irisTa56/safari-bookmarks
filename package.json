@@ -5,7 +5,7 @@
   "description": "Type-checking only: Chrome loads extension/ and Node runs scripts/ as they are, with no build.",
   "devDependencies": {
     "@types/chrome": "^0.3.7",
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.6",
     "typescript": "^7.0.2"
   }
 }
