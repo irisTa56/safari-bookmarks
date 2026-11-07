@@ -7,6 +7,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Version updates move only what the manifest names unless told otherwise;
+    # the CI baseline sets this on every lockfile entry.
+    allow:
+      - dependency-type: "all"
     groups:
       npm-deps:
         patterns: ["*"]
