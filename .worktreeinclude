@@ -1,0 +1,3 @@
+# Names the private repository that receives Entire's checkpoints. Without
+# it in a worktree, a push carries no checkpoint.
+.entire/settings.local.json
