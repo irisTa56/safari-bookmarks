@@ -96,8 +96,9 @@ section > details > summary {
   font-size: 1.08em;
   margin-top: 8px;
 }
+/* A bookmarklet has no link (panel.js), so its row is not highlighted. */
 summary:hover,
-li.bm:hover {
+li.bm:has(a):hover {
   background: var(--hover);
 }
 .name,
@@ -109,6 +110,7 @@ li.bm {
 /* A bookmark's favicon sits where its sibling folders' icons do, and its title
    where their names do. */
 li.bm {
+  position: relative;
   padding: 0.15em var(--pad) 0.15em calc(var(--pad) + var(--chevron) + var(--gap));
   border-radius: 4px;
 }
@@ -122,6 +124,13 @@ li > details > summary .name::before,
 }
 li a {
   text-decoration: none;
+}
+/* The link covers its whole row (li.bm is its containing block), favicon and
+   host included, so the row a hover highlights is the row a click opens. */
+li.bm a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 li a:hover {
   text-decoration: underline;
