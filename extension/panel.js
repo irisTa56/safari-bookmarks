@@ -46,7 +46,12 @@ function folder(title, children, open) {
   const details = document.createElement("details");
   details.open = open;
   const summary = document.createElement("summary");
-  summary.textContent = title;
+  // In its own element, so a long title is cut short beside the chevron
+  // panel.css draws, instead of pushing the row wider than the panel.
+  const name = document.createElement("span");
+  name.className = "name";
+  name.textContent = title;
+  summary.append(name);
   const ul = document.createElement("ul");
   ul.append(...children.map(item));
   details.append(summary, ul);
@@ -68,9 +73,22 @@ function item(entry) {
   // A bookmarklet would run against the page it is opened on, which from
   // here is not the page it was made for, so it is listed without a link.
   if (entry.url.startsWith("javascript:")) {
-    li.append(entry.title);
+    // An empty slot where a favicon would be, so the title lines up.
+    const blank = document.createElement("span");
+    blank.className = "favicon";
+    li.append(blank, entry.title);
     host.textContent = "bookmarklet";
   } else {
+    // Chrome's own favicon store, which the "favicon" permission opens.
+    const src = new URL(chrome.runtime.getURL("/_favicon/"));
+    src.searchParams.set("pageUrl", entry.url);
+    src.searchParams.set("size", "32");
+    const icon = document.createElement("img");
+    icon.className = "favicon";
+    icon.alt = "";
+    icon.loading = "lazy";
+    icon.src = src.href;
+    li.append(icon);
     const a = document.createElement("a");
     a.href = entry.url;
     a.textContent = entry.title;

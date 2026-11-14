@@ -1,7 +1,7 @@
 :root {
   color-scheme: light dark;
   --muted: #6b7280;
-  --line: #d1d5db;
+  --line: color-mix(in srgb, CanvasText 18%, transparent);
 }
 body {
   font:
@@ -32,34 +32,105 @@ header {
   color: var(--muted);
   font-size: 11px;
 }
+/* The tree's geometry, in em so it scales with the text size control. A row
+   is padded by --pad, then a folder draws its chevron in --chevron. A folder's
+   list hangs its guide line under the middle of that chevron, and each level
+   steps in by --indent, which is kept narrower than a row's chevron and icon so
+   a deep folder keeps room for its titles. */
 main {
   font-size: var(--size, 13px);
+  line-height: 1.6;
+  --pad: 0.25em;
+  --chevron: 0.8em;
+  --gap: 0.15em;
+  --indent: 0.75em;
+  --hover: color-mix(in srgb, CanvasText 8%, transparent);
 }
 ul {
   list-style: none;
   margin: 0;
-  padding-left: 14px;
+  padding: 0;
+}
+details > ul {
+  margin-left: calc(var(--pad) + var(--chevron) / 2);
+  padding-left: calc(var(--indent) - var(--pad) - var(--chevron) / 2);
   border-left: 1px solid var(--line);
 }
-section > details > ul {
-  border-left: none;
-  padding-left: 2px;
-}
 summary {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: 0.15em var(--pad);
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 600;
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+summary::before {
+  content: "";
+  flex: none;
+  width: var(--chevron);
+  height: var(--chevron);
+  background: var(--muted);
+  mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  transition: transform 0.1s;
+}
+details[open] > summary::before {
+  transform: rotate(90deg);
+}
+/* A nested folder carries a folder icon, so it reads apart from the bookmarks
+   beside it; a section, the top of the tree, does not need one. */
+li > details > summary .name::before {
+  content: "";
+  background: var(--muted);
+  mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 4.5a1 1 0 0 1 1-1h3.6l1.5 1.5h5.9a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z' fill='black'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 section > details > summary {
   font-size: 1.08em;
   margin-top: 8px;
 }
-li {
+/* A bookmarklet has no link (panel.js), so its row is not highlighted. */
+summary:hover,
+li.bm:has(a):hover {
+  background: var(--hover);
+}
+.name,
+li.bm {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* A bookmark's favicon sits where its sibling folders' icons do, and its title
+   where their names do. */
+li.bm {
+  position: relative;
+  padding: 0.15em var(--pad) 0.15em calc(var(--pad) + var(--chevron) + var(--gap));
+  border-radius: 4px;
+}
+li > details > summary .name::before,
+.favicon {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.35em;
+  vertical-align: -0.2em;
+}
 li a {
   text-decoration: none;
+}
+/* The link covers its whole row (li.bm is its containing block), favicon and
+   host included, so the row a hover highlights is the row a click opens. */
+li.bm a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 li a:hover {
   text-decoration: underline;
