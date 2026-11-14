@@ -35,13 +35,14 @@ header {
 /* The tree's geometry, in em so it scales with the text size control. A row
    is padded by --pad, then a folder draws its chevron in --chevron. A folder's
    list hangs its guide line under the middle of that chevron, and is indented
-   so the next level's chevrons start where this level's titles do. */
+   by the chevron and its gap, so each level steps in by --pad + --chevron +
+   --gap and a child's row starts where its parent's icon does. */
 main {
   font-size: var(--size, 13px);
   line-height: 1.6;
-  --pad: 0.4em;
-  --chevron: 1em;
-  --gap: 0.25em;
+  --pad: 0.25em;
+  --chevron: 0.8em;
+  --gap: 0.15em;
   --hover: color-mix(in srgb, CanvasText 8%, transparent);
 }
 ul {
@@ -49,7 +50,7 @@ ul {
   margin: 0;
   padding: 0;
 }
-li > details > ul {
+details > ul {
   margin-left: calc(var(--pad) + var(--chevron) / 2);
   padding-left: calc(var(--chevron) / 2 + var(--gap));
   border-left: 1px solid var(--line);
@@ -85,11 +86,6 @@ details[open] > summary::before {
    beside it; a section, the top of the tree, does not need one. */
 li > details > summary .name::before {
   content: "";
-  display: inline-block;
-  width: 1.1em;
-  height: 1.1em;
-  margin-right: 0.35em;
-  vertical-align: -0.2em;
   background: var(--muted);
   mask:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 4.5a1 1 0 0 1 1-1h3.6l1.5 1.5h5.9a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z' fill='black'/%3E%3C/svg%3E")
@@ -109,10 +105,19 @@ li.bm {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* A bookmark's title lines up with its sibling folders' icons. */
+/* A bookmark's favicon sits where its sibling folders' icons do, and its title
+   where their names do. */
 li.bm {
   padding: 0.15em var(--pad) 0.15em calc(var(--pad) + var(--chevron) + var(--gap));
   border-radius: 4px;
+}
+li > details > summary .name::before,
+.favicon {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.35em;
+  vertical-align: -0.2em;
 }
 li a {
   text-decoration: none;
