@@ -32,11 +32,11 @@ if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then 
 
 # `secrets:commit-scan` (per commit, gitleaks), `secrets:push-scan` (per push,
 # trufflehog), `link-check:staged` (per commit, lychee over the network) and
-# `shared-tasks:check` come from dotfiles' shared task library, whose
+# `upstream:pin-check` come from dotfiles' shared task library, whose
 # `tasks/README.md` says why `ref` is a full sha on its `main`.
 [task_config]
 includes = [
-  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=3e686e17481efeb1fa1fe96d349a60dd4a858c6d",
+  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=5ead13385eb8cbffeb395d3046305e4220e2a6f3",
 ]
 
 # CI runs each `qa:` task as a job of its own (.github/workflows/ci.yml), so a new
