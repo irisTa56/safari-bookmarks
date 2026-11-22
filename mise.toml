@@ -16,7 +16,7 @@ shfmt = "latest"
 # runs the pre-commit task. The push scan is registered in git's config instead,
 # since it needs git's remote argument and ref lines on stdin, which only a hook
 # registered there receives (git 2.54+; see dotfiles' tasks/README.md). So are
-# the hook that keeps what `install` puts outside the repository current with
+# the hook that keeps what `host:install` puts outside the repository current with
 # the main checkout. Changes reach that checkout only by `git pull` once their
 # pull request is merged (CLAUDE.md), so post-merge is the one event to follow.
 [hooks]
@@ -26,17 +26,17 @@ git config hook.secrets-push-scan.event pre-push
 git config hook.secrets-push-scan.command 'mise run secrets:push-scan'
 git hook list pre-push 2>/dev/null | grep -qx secrets-push-scan || echo "warning: this git ignores hook.* config, so pushes are not scanned; git 2.54 or later runs it" >&2
 git config hook.install-post-merge.event post-merge
-git config hook.install-post-merge.command 'mise run install:hook'
-if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then mise run install; fi
+git config hook.install-post-merge.command 'mise run host:reinstall'
+if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then mise run host:install; fi
 '''
 
 # `secrets:commit-scan` (per commit, gitleaks), `secrets:push-scan` (per push,
-# trufflehog), `link-check:staged` (per commit, lychee over the network) and
+# trufflehog), `links:commit-check` (per commit, lychee over the network) and
 # `upstream:pin-check` come from dotfiles' shared task library, whose
 # `tasks/README.md` says why `ref` is a full sha on its `main`.
 [task_config]
 includes = [
-  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=9eeb1ebaf663133bad48280e9a37913e5def87bb",
+  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=e51e67c07c95fa66a23fcd4e3a1dc5a9a4728efa",
 ]
 
 # CI runs each `qa:` task as a job of its own (.github/workflows/ci.yml), so a new
@@ -46,7 +46,7 @@ includes = [
 # networked link check would gate a pull request on third-party hosts.
 [tasks.pre-commit]
 description = "Run pre-commit checks"
-depends = ["qa:**", "secrets:commit-scan", "link-check:staged"]
+depends = ["qa:**", "secrets:commit-scan", "links:commit-check"]
 
 # Nothing here is built: Chrome loads extension/ as is and Node runs scripts/.
 # Biome formats and lints both (biome.json), and tsc type-checks their
@@ -72,12 +72,12 @@ description = "Lint markdown files"
 run = "rumdl check"
 
 # Offline, so a pull request never waits on a third-party host; the weekly
-# workflow and `check:links` request every link.
+# workflow and `links:check` request every link.
 [tasks."qa:links:offline"]
 description = "Check links offline (no network)"
 run = "lychee --offline --no-progress --config lychee.toml ."
 
-[tasks."check:links"]
+[tasks."links:check"]
 description = "Check links in the repo"
 run = "lychee -v --config lychee.toml ."
 
@@ -93,27 +93,27 @@ run = "shfmt -i 2 -w scripts/*.sh"
 description = "Format markdown files"
 run = "rumdl check --fix"
 
-[tasks.fmt]
+[tasks.format]
 description = "Format every file the checks cover"
 depends = ["fmt:*"]
 
 # What is installed where, and why, is scripts/install.js's header. `mise
 # install` runs this in the main checkout, and the post-merge hook above again
-# through `install:hook`; an edit to the host is tried before it is merged by
+# through `host:reinstall`; an edit to the host is tried before it is merged by
 # running this by hand.
-[tasks.install]
+[tasks."host:install"]
 description = "Install the exporter and the native host out of the repository and register the host with Chrome"
 run = "node scripts/install.js"
 
-# After a merge, install again when it changed what install copies or does.
+# After a merge, install again when it changed what `host:install` copies or does.
 # Only the main checkout installs: the extension Chrome loads, and so the ID the
 # host allows, is the one in that checkout, and a worktree would overwrite its
 # host with its own branch's. Quiet when nothing went wrong, as a git hook.
-[tasks."install:hook"]
+[tasks."host:reinstall"]
 description = "Install again after a merge that changed the host or how it is installed, in the main checkout only"
 hide = true
 run = '''
 [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ] || exit 0
 git diff --quiet ORIG_HEAD HEAD -- scripts/open_in_safari_host.sh scripts/install.js mise.toml && exit 0
-mise run install >/dev/null
+mise run host:install >/dev/null
 '''

@@ -10,7 +10,7 @@
 // "Native host has exited"), the script a link resolves to included.
 // my-foam's daemon runs D/export_bookmarks.js (README.md "Running").
 //
-// Run through `mise run install` (mise.toml says when it runs on its own).
+// Run through `mise run host:install` (mise.toml says when it runs on its own).
 // From a worktree, only the host comes from that worktree, so an edit to it can
 // be tried before it is merged: the extension Chrome loads, and so the ID the
 // host allows, and the exporter the daemon runs stay the main checkout's, which

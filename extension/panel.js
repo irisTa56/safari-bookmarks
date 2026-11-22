@@ -21,7 +21,7 @@ try {
   });
 } catch (e) {
   const message = e instanceof Error ? e.message : String(e);
-  status.textContent = `${message}. Is the host installed (mise run install)?`;
+  status.textContent = `${message}. Is the host installed (mise run host:install)?`;
 }
 if (res?.ok) {
   for (const s of res.bookmarks.sections) {
