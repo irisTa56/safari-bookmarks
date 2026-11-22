@@ -7,7 +7,7 @@
 // Usage:
 //   export_bookmarks.js [OUT]
 //
-// OUT defaults to bookmarks.json in the install directory (`mise run install`),
+// OUT defaults to bookmarks.json in the install directory (`mise run host:install`),
 // where the native host reads it for the side panel; it is rewritten on every
 // run. A daemon outside this repository runs this through the symlink the
 // install leaves there, at start and on each change to Bookmarks.plist
