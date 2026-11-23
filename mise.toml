@@ -36,7 +36,7 @@ if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then 
 # `tasks/README.md` says why `ref` is a full sha on its `main`.
 [task_config]
 includes = [
-  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=e51e67c07c95fa66a23fcd4e3a1dc5a9a4728efa",
+  "git::https://github.com/irisTa56/dotfiles.git//tasks?ref=e4ebf22840d620ef3aa024fdc2ea8ab0a6cde384",
 ]
 
 # CI runs each `qa:` task as a job of its own (.github/workflows/ci.yml), so a new
