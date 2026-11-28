@@ -96,11 +96,6 @@ section > details > summary {
   font-size: 1.08em;
   margin-top: 8px;
 }
-/* A bookmarklet has no link (panel.js), so its row is not highlighted. */
-summary:hover,
-li.bm:has(a):hover {
-  background: var(--hover);
-}
 .name,
 li.bm {
   overflow: hidden;
@@ -113,6 +108,11 @@ li.bm {
   position: relative;
   padding: 0.15em var(--pad) 0.15em calc(var(--pad) + var(--chevron) + var(--gap));
   border-radius: 4px;
+}
+/* A bookmarklet has no link (panel.js), so its row is not highlighted. */
+summary:hover,
+li.bm:has(a):hover {
+  background: var(--hover);
 }
 li > details > summary .name::before,
 .favicon {
